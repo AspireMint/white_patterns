@@ -1,7 +1,7 @@
 # white_patterns  
 
 
-White decorative patterns for exterior walls
+White decorative patterns for exterior walls, inspired by houses in Čičmany, Slovakia.
   
 
 Code licensed as GPLv3 (see file LICENSE)  
