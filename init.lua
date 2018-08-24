@@ -3,6 +3,10 @@ local MOD_NAME = core.get_current_modname()
 
 local palette = {}
 
+minetest.register_on_leaveplayer(function(player)
+	palette[player:get_player_name()] = nil
+end)
+
 function get_shape_name(num)
     return num < 10 and "0"..num or num
 end
@@ -83,6 +87,12 @@ minetest.register_tool(MOD_NAME..":brush", {
         end
         
         if pointed_thing.type ~= "node" then
+            return nil
+        end
+        
+        if minetest.is_protected(pointed_thing.above, player_name)
+        or minetest.is_protected(pointed_thing.under, player_name)
+        then
             return nil
         end
         
