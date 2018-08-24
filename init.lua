@@ -1,12 +1,6 @@
 local TEXTURES = 43
 local MOD_NAME = core.get_current_modname()
 
-local palette = {}
-
-minetest.register_on_leaveplayer(function(player)
-	palette[player:get_player_name()] = nil
-end)
-
 function get_shape_name(num)
     return num < 10 and "0"..num or num
 end
@@ -32,7 +26,14 @@ minetest.register_on_player_receive_fields(function(painter, formname, fields)
     for k,v in pairs(fields) do
         local num = tonumber(k)
         if num ~= nil then
-            palette[painter:get_player_name()] = get_shape_name(num)
+            local itemstack = painter:get_wielded_item()
+            
+            if itemstack:get_name() ~= MOD_NAME ..":brush" then return end
+            
+            local meta = itemstack:get_meta()
+            meta:set_string("shape", get_shape_name(num))
+            painter:set_wielded_item(itemstack)
+            
             return
         end
     end
@@ -50,7 +51,7 @@ for i=0,TEXTURES-1,1 do
 		paramtype = "light",
 		paramtype2 = "wallmounted",
 		is_ground_content = false,
-        groups = {cracky=1, attached_node=1, not_in_creative_inventory=1},
+        groups = {cracky=1, attached_node=1, not_in_creative_inventory=1, white_pattern=1},
         buildable_to = true,
         walkable = false,
         node_box = {
@@ -80,8 +81,9 @@ minetest.register_tool(MOD_NAME..":brush", {
 	
     on_use = function(itemstack, user, pointed_thing)
         local player_name = user:get_player_name()
+        local meta = itemstack:get_meta()
         
-        if pointed_thing.type == "nothing" or not palette[player_name] then
+        if pointed_thing.type == "nothing" or meta:get_string("shape") == "" then
             show_palette(user)
             return nil
         end
@@ -108,7 +110,12 @@ minetest.register_tool(MOD_NAME..":brush", {
             return nil
         end
         
-        local shape = MOD_NAME ..":".. palette[player_name]
+        if node_above_def.groups.white_pattern then
+            minetest.swap_node(pointed_thing.above, {name = "air"})
+            return nil
+        end
+        
+        local shape = MOD_NAME ..":".. meta:get_string("shape")
         local dir = vector.direction(pointed_thing.above, pointed_thing.under)
         local wallmounted = minetest.dir_to_wallmounted(dir)
         minetest.swap_node(pointed_thing.above, {name = shape, param2=wallmounted})
